@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>&#24037;&#31243;&#35336;&#31639;&#27231;</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      color-scheme: dark;
+      --bg-start: #0b1020;
+      --bg-end: #141c2f;
+      --panel: rgba(17, 24, 39, 0.9);
+      --panel-border: rgba(148, 163, 184, 0.18);
+      --display-bg: rgba(15, 23, 42, 0.92);
+      --text-main: #e5eefc;
+      --text-muted: #8ea0c2;
+      --button: #1d2638;
+      --button-hover: #273248;
+      --button-func: #22314a;
+      --button-op: #0f766e;
+      --button-op-hover: #0d9488;
+      --button-equal: #2563eb;
+      --button-equal-hover: #1d4ed8;
+      --danger: #7f1d1d;
+      --danger-hover: #991b1b;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at top, rgba(56, 189, 248, 0.16), transparent 32%),
+        linear-gradient(160deg, var(--bg-start), var(--bg-end));
+      font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+      color: var(--text-main);
+    }
+
+    .calculator {
+      width: min(100%, 430px);
+      padding: 22px;
+      border: 1px solid var(--panel-border);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .mode-indicator {
+      padding: 8px 12px;
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.12);
+      color: #bfe8fb;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .display-panel {
+      margin-bottom: 18px;
+      padding: 16px;
+      border-radius: 20px;
+      background: var(--display-bg);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 24px;
+      margin-bottom: 12px;
+    }
+
+    .status {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .status.error {
+      color: #fecaca;
+    }
+
+    .preview {
+      min-height: 24px;
+      text-align: right;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      word-break: break-all;
+    }
+
+    .result {
+      min-height: 52px;
+      margin-top: 8px;
+      text-align: right;
+      font-size: clamp(2rem, 5vw, 2.6rem);
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .section {
+      margin-bottom: 14px;
+    }
+
+    .section:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .section-label {
+      margin: 0 0 10px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .button-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .button-grid.scientific {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      margin-bottom: 8px;
+    }
+
+    .button-grid.basic {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    button {
+      min-height: 56px;
+      border: none;
+      border-radius: 16px;
+      background: var(--button);
+      color: var(--text-main);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    button:hover {
+      background: var(--button-hover);
+      box-shadow: 0 10px 24px rgba(2, 6, 23, 0.25);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.function {
+      background: var(--button-func);
+      color: #c7dbff;
+    }
+
+    button.operator {
+      background: var(--button-op);
+    }
+
+    button.operator:hover {
+      background: var(--button-op-hover);
+    }
+
+    button.equal {
+      background: var(--button-equal);
+    }
+
+    button.equal:hover {
+      background: var(--button-equal-hover);
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: #fee2e2;
+    }
+
+    button.danger:hover {
+      background: var(--danger-hover);
+    }
+
+    button.wide {
+      grid-column: span 2;
+    }
+
+    .watermark {
+      position: fixed;
+      right: 18px;
+      bottom: 16px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 12px;
+      }
+
+      .calculator {
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .button-grid.scientific {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      button {
+        min-height: 52px;
+        font-size: 0.95rem;
+      }
+
+      .watermark {
+        right: 12px;
+        bottom: 12px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="header">
+      <h1 class="title">&#24037;&#31243;&#35336;&#31639;&#27231;</h1>
+      <div id="modeIndicator" class="mode-indicator">DEG</div>
+    </div>
+
+    <div class="display-panel">
+      <div class="status-row">
+        <div id="status" class="status">&#28310;&#20633;&#23601;&#32210;</div>
+        <div id="miniMode" class="status">&#27169;&#24335;&#65306;&#35282;&#24230;</div>
+      </div>
+      <div id="preview" class="preview">0</div>
+      <div id="result" class="result">0</div>
+    </div>
+
+    <div class="section">
+      <p class="section-label">&#31185;&#23416;&#21151;&#33021;</p>
+      <div class="button-grid scientific">
+        <button class="function" data-action="mode">&#35282;&#24230; / &#24359;&#24230;</button>
+        <button class="function" data-insert="sin(">sin</button>
+        <button class="function" data-insert="cos(">cos</button>
+        <button class="function" data-insert="tan(">tan</button>
+        <button class="function" data-insert="log(">log</button>
+
+        <button class="function" data-insert="asin(">asin</button>
+        <button class="function" data-insert="acos(">acos</button>
+        <button class="function" data-insert="atan(">atan</button>
+        <button class="function" data-insert="ln(">ln</button>
+        <button class="function" data-insert="sqrt(">&#8730;</button>
+
+        <button class="function" data-action="square">&#24179;&#26041;</button>
+        <button class="function" data-insert="^">&#20906;&#27425;</button>
+        <button class="function" data-insert="inv(">&#20498;&#25976;</button>
+        <button class="function" data-insert="!">&#38542;&#20056;</button>
+        <button class="function" data-insert="%">&#30334;&#20998;&#27604;</button>
+
+        <button class="function" data-insert="pi">&#960;</button>
+        <button class="function" data-insert="e">e</button>
+        <button class="function" data-insert="(">(</button>
+        <button class="function" data-insert=")">)</button>
+        <button class="function" data-action="toggle-sign">&#27491;&#36000;</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="section-label">&#22522;&#26412;&#36939;&#31639;</p>
+      <div class="button-grid basic">
+        <button class="danger" data-action="clear">&#28165;&#38500;</button>
+        <button class="danger" data-action="delete">&#21034;&#38500;</button>
+        <button class="operator" data-insert="/">&#247;</button>
+        <button class="operator" data-insert="*">&#215;</button>
+
+        <button data-insert="7">7</button>
+        <button data-insert="8">8</button>
+        <button data-insert="9">9</button>
+        <button class="operator" data-insert="-">-</button>
+
+        <button data-insert="4">4</button>
+        <button data-insert="5">5</button>
+        <button data-insert="6">6</button>
+        <button class="operator" data-insert="+">+</button>
+
+        <button data-insert="1">1</button>
+        <button data-insert="2">2</button>
+        <button data-insert="3">3</button>
+        <button class="equal" data-action="calculate">=</button>
+
+        <button class="wide" data-insert="0">0</button>
+        <button data-insert=".">.</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="watermark" class="watermark"></div>
+
+  <script>
+    const preview = document.getElementById("preview");
+    const result = document.getElementById("result");
+    const status = document.getElementById("status");
+    const modeIndicator = document.getElementById("modeIndicator");
+    const miniMode = document.getElementById("miniMode");
+    const calculator = document.querySelector(".calculator");
+    const watermark = document.getElementById("watermark");
+
+    let expression = "";
+    let angleMode = "DEG";
+    let lastAnswer = null;
+    let errorState = false;
+
+    const functions = new Set(["sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "sqrt", "inv", "neg"]);
+    const operators = new Set(["+", "-", "*", "/", "^", "u-"]);
+    const postfixOperators = new Set(["!", "%"]);
+    const constants = new Set(["pi", "e"]);
+
+    function t(code) {
+      return code.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    }
+
+    function renderExpression(value) {
+      return (value || "0")
+        .replace(/pi/g, "\u03c0")
+        .replace(/sqrt/g, "\u221a")
+        .replace(/inv/g, "1/")
+        .replace(/\*/g, "\u00d7")
+        .replace(/\//g, "\u00f7");
+    }
+
+    function setStatus(message, isError) {
+      status.textContent = message;
+      status.classList.toggle("error", Boolean(isError));
+    }
+
+    function updateModeDisplay() {
+      modeIndicator.textContent = angleMode;
+      miniMode.textContent = t("\u6a21\u5f0f\uff1a") + (angleMode === "DEG" ? t("\u89d2\u5ea6") : t("\u5f27\u5ea6"));
+    }
+
+    function updateScreen(output) {
+      preview.textContent = renderExpression(expression);
+      result.textContent = output ?? (lastAnswer !== null && expression === "" ? formatNumber(lastAnswer) : "0");
+    }
+
+    function updateWatermark() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      watermark.textContent = t("\u674e\u4e39\u7acb") + " " + year + "-" + month + "-" + day;
+    }
+
+    function clearErrorIfNeeded() {
+      if (errorState) {
+        expression = "";
+        errorState = false;
+        setStatus(t("\u6e96\u5099\u5c31\u7dd2"), false);
+      }
+    }
+
+    function appendValue(value) {
+      clearErrorIfNeeded();
+      expression += value;
+      updateScreen();
+    }
+
+    function deleteOne() {
+      if (errorState) {
+        expression = "";
+        errorState = false;
+        setStatus(t("\u6e96\u5099\u5c31\u7dd2"), false);
+        updateScreen();
+        return;
+      }
+
+      if (!expression) {
+        return;
+      }
+
+      expression = expression.slice(0, -1);
+      updateScreen();
+    }
+
+    function clearAll() {
+      expression = "";
+      errorState = false;
+      setStatus(t("\u6e96\u5099\u5c31\u7dd2"), false);
+      updateScreen("0");
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) {
+        throw new Error(t("\u7d50\u679c\u8d85\u51fa\u7bc4\u570d"));
+      }
+
+      if (Object.is(value, -0)) {
+        value = 0;
+      }
+
+      const abs = Math.abs(value);
+      if (abs >= 1e12 || (abs > 0 && abs < 1e-9)) {
+        return value.toExponential(8).replace(/\.?0+e/, "e");
+      }
+
+      return String(Number(value.toFixed(12)));
+    }
+
+    function factorial(n) {
+      if (!Number.isInteger(n) || n < 0) {
+        throw new Error(t("\u968e\u4e58\u53ea\u652f\u63f4\u975e\u8ca0\u6574\u6578"));
+      }
+
+      if (n > 170) {
+        throw new Error(t("\u968e\u4e58\u7d50\u679c\u904e\u5927"));
+      }
+
+      let total = 1;
+      for (let i = 2; i <= n; i += 1) {
+        total *= i;
+      }
+      return total;
+    }
+
+    function toRadians(value) {
+      return angleMode === "DEG" ? value * Math.PI / 180 : value;
+    }
+
+    function fromRadians(value) {
+      return angleMode === "DEG" ? value * 180 / Math.PI : value;
+    }
+
+    function tokenize(source) {
+      const tokens = [];
+      let index = 0;
+
+      while (index < source.length) {
+        const char = source[index];
+
+        if (char === " ") {
+          index += 1;
+          continue;
+        }
+
+        if (/\d|\./.test(char)) {
+          let numberText = char;
+          let hasExponent = false;
+          index += 1;
+
+          while (index < source.length) {
+            const currentChar = source[index];
+
+            if (/[\d.]/.test(currentChar)) {
+              numberText += currentChar;
+              index += 1;
+              continue;
+            }
+
+            if (!hasExponent && /e/i.test(currentChar) && /\d|\./.test(numberText[numberText.length - 1])) {
+              hasExponent = true;
+              numberText += currentChar;
+              index += 1;
+
+              if (/[+-]/.test(source[index])) {
+                numberText += source[index];
+                index += 1;
+              }
+              continue;
+            }
+
+            break;
+          }
+
+          if ((numberText.match(/\./g) || []).length > 1 || numberText === ".") {
+            throw new Error(t("\u5c0f\u6578\u683c\u5f0f\u932f\u8aa4"));
+          }
+
+          if (/e[+-]?$/i.test(numberText)) {
+            throw new Error(t("\u79d1\u5b78\u8a18\u865f\u683c\u5f0f\u932f\u8aa4"));
+          }
+
+          tokens.push(numberText);
+          continue;
+        }
+
+        if (/[a-z]/i.test(char)) {
+          let name = char;
+          index += 1;
+
+          while (index < source.length && /[a-z]/i.test(source[index])) {
+            name += source[index];
+            index += 1;
+          }
+
+          if (!functions.has(name) && !constants.has(name)) {
+            throw new Error(t("\u672a\u77e5\u51fd\u6578\uff1a") + name);
+          }
+
+          tokens.push(name);
+          continue;
+        }
+
+        if ("+-*/^()%!".includes(char)) {
+          tokens.push(char);
+          index += 1;
+          continue;
+        }
+
+        throw new Error(t("\u7121\u6cd5\u8fa8\u8b58\u8f38\u5165\uff1a") + char);
+      }
+
+      return tokens;
+    }
+
+    function toRpn(tokens) {
+      const output = [];
+      const stack = [];
+      const precedence = { "u-": 5, "^": 4, "*": 3, "/": 3, "+": 2, "-": 2 };
+      const rightAssociative = new Set(["u-", "^"]);
+
+      for (let i = 0; i < tokens.length; i += 1) {
+        const token = tokens[i];
+        const previous = tokens[i - 1];
+
+        if (!Number.isNaN(Number(token))) {
+          output.push(token);
+          continue;
+        }
+
+        if (constants.has(token)) {
+          output.push(token);
+          continue;
+        }
+
+        if (functions.has(token)) {
+          stack.push(token);
+          continue;
+        }
+
+        if (postfixOperators.has(token)) {
+          output.push(token);
+          continue;
+        }
+
+        if (token === "(") {
+          stack.push(token);
+          continue;
+        }
+
+        if (token === ")") {
+          while (stack.length && stack[stack.length - 1] !== "(") {
+            output.push(stack.pop());
+          }
+
+          if (!stack.length) {
+            throw new Error(t("\u62ec\u865f\u4e0d\u5339\u914d"));
+          }
+
+          stack.pop();
+
+          if (stack.length && functions.has(stack[stack.length - 1])) {
+            output.push(stack.pop());
+          }
+          continue;
+        }
+
+        let current = token;
+        if (token === "-" && (!previous || operators.has(previous) || previous === "(")) {
+          current = "u-";
+        }
+
+        if (!operators.has(current)) {
+          throw new Error(t("\u904b\u7b97\u5f0f\u932f\u8aa4"));
+        }
+
+        while (stack.length) {
+          const top = stack[stack.length - 1];
+          if (top === "(") {
+            break;
+          }
+
+          const topIsFunction = functions.has(top);
+          const topPrecedence = precedence[top];
+          const currentPrecedence = precedence[current];
+          const shouldPopFunction = topIsFunction;
+          const shouldPopOperator = operators.has(top) && (
+            rightAssociative.has(current)
+              ? currentPrecedence < topPrecedence
+              : currentPrecedence <= topPrecedence
+          );
+
+          if (!shouldPopFunction && !shouldPopOperator) {
+            break;
+          }
+
+          output.push(stack.pop());
+        }
+
+        stack.push(current);
+      }
+
+      while (stack.length) {
+        const top = stack.pop();
+        if (top === "(" || top === ")") {
+          throw new Error(t("\u62ec\u865f\u4e0d\u5339\u914d"));
+        }
+        output.push(top);
+      }
+
+      return output;
+    }
+
+    function applyFunction(name, value) {
+      switch (name) {
+        case "sin":
+          return Math.sin(toRadians(value));
+        case "cos":
+          return Math.cos(toRadians(value));
+        case "tan":
+          return Math.tan(toRadians(value));
+        case "asin":
+          if (value < -1 || value > 1) {
+            throw new Error("asin " + t("\u5b9a\u7fa9\u57df\u70ba -1 \u5230 1"));
+          }
+          return fromRadians(Math.asin(value));
+        case "acos":
+          if (value < -1 || value > 1) {
+            throw new Error("acos " + t("\u5b9a\u7fa9\u57df\u70ba -1 \u5230 1"));
+          }
+          return fromRadians(Math.acos(value));
+        case "atan":
+          return fromRadians(Math.atan(value));
+        case "log":
+          if (value <= 0) {
+            throw new Error("log " + t("\u53ea\u652f\u63f4\u6b63\u6578"));
+          }
+          return Math.log10(value);
+        case "ln":
+          if (value <= 0) {
+            throw new Error("ln " + t("\u53ea\u652f\u63f4\u6b63\u6578"));
+          }
+          return Math.log(value);
+        case "sqrt":
+          if (value < 0) {
+            throw new Error(t("\u5e73\u65b9\u6839\u53ea\u652f\u63f4\u975e\u8ca0\u6578"));
+          }
+          return Math.sqrt(value);
+        case "inv":
+          if (value === 0) {
+            throw new Error("0 " + t("\u7121\u6cd5\u53d6\u5012\u6578"));
+          }
+          return 1 / value;
+        case "neg":
+          return -value;
+        default:
+          throw new Error(t("\u672a\u77e5\u51fd\u6578\uff1a") + name);
+      }
+    }
+
+    function evaluateRpn(rpn) {
+      const stack = [];
+
+      for (const token of rpn) {
+        if (!Number.isNaN(Number(token))) {
+          stack.push(Number(token));
+          continue;
+        }
+
+        if (token === "pi") {
+          stack.push(Math.PI);
+          continue;
+        }
+
+        if (token === "e") {
+          stack.push(Math.E);
+          continue;
+        }
+
+        if (token === "u-") {
+          if (!stack.length) {
+            throw new Error(t("\u7f3a\u5c11\u904b\u7b97\u5143"));
+          }
+          stack.push(-stack.pop());
+          continue;
+        }
+
+        if (token === "!") {
+          if (!stack.length) {
+            throw new Error(t("\u7f3a\u5c11\u904b\u7b97\u5143"));
+          }
+          stack.push(factorial(stack.pop()));
+          continue;
+        }
+
+        if (token === "%") {
+          if (!stack.length) {
+            throw new Error(t("\u7f3a\u5c11\u904b\u7b97\u5143"));
+          }
+          stack.push(stack.pop() / 100);
+          continue;
+        }
+
+        if (functions.has(token)) {
+          if (!stack.length) {
+            throw new Error(t("\u7f3a\u5c11\u51fd\u6578\u53c3\u6578"));
+          }
+          stack.push(applyFunction(token, stack.pop()));
+          continue;
+        }
+
+        if (operators.has(token)) {
+          if (stack.length < 2) {
+            throw new Error(t("\u7f3a\u5c11\u904b\u7b97\u5143"));
+          }
+
+          const b = stack.pop();
+          const a = stack.pop();
+
+          switch (token) {
+            case "+":
+              stack.push(a + b);
+              break;
+            case "-":
+              stack.push(a - b);
+              break;
+            case "*":
+              stack.push(a * b);
+              break;
+            case "/":
+              if (b === 0) {
+                throw new Error(t("\u4e0d\u53ef\u9664\u4ee5 0"));
+              }
+              stack.push(a / b);
+              break;
+            case "^":
+              stack.push(Math.pow(a, b));
+              break;
+            default:
+              throw new Error(t("\u672a\u77e5\u904b\u7b97\u5b50"));
+          }
+          continue;
+        }
+
+        throw new Error(t("\u904b\u7b97\u5931\u6557"));
+      }
+
+      if (stack.length !== 1) {
+        throw new Error(t("\u904b\u7b97\u5f0f\u4e0d\u5b8c\u6574"));
+      }
+
+      return stack[0];
+    }
+
+    function evaluateExpression(source) {
+      if (!source) {
+        return 0;
+      }
+
+      const tokens = tokenize(source);
+      const rpn = toRpn(tokens);
+      const value = evaluateRpn(rpn);
+
+      if (!Number.isFinite(value)) {
+        throw new Error(t("\u7d50\u679c\u7121\u6548"));
+      }
+
+      return value;
+    }
+
+    function findLastOperandRange(source) {
+      if (!source) {
+        return null;
+      }
+
+      let end = source.length;
+      let start = end;
+      let depth = 0;
+
+      while (end > 0 && postfixOperators.has(source[end - 1])) {
+        end -= 1;
+      }
+
+      if (source[end - 1] === ")") {
+        for (let i = end - 1; i >= 0; i -= 1) {
+          if (source[i] === ")") {
+            depth += 1;
+          } else if (source[i] === "(") {
+            depth -= 1;
+            if (depth === 0) {
+              start = i;
+              let j = i - 1;
+              while (j >= 0 && /[a-z]/i.test(source[j])) {
+                start = j;
+                j -= 1;
+              }
+              return { start, end: source.length };
+            }
+          }
+        }
+        return null;
+      }
+
+      start = end;
+      while (start > 0 && /[a-z0-9.]/i.test(source[start - 1])) {
+        start -= 1;
+      }
+
+      if (start === end) {
+        return null;
+      }
+
+      return { start, end: source.length };
+    }
+
+    function toggleSign() {
+      clearErrorIfNeeded();
+
+      if (!expression) {
+        expression = "-";
+        updateScreen();
+        return;
+      }
+
+      const range = findLastOperandRange(expression);
+      if (!range) {
+        expression += "-";
+        updateScreen();
+        return;
+      }
+
+      const target = expression.slice(range.start, range.end);
+      if (target.startsWith("neg(") && target.endsWith(")")) {
+        expression = expression.slice(0, range.start) + target.slice(4, -1);
+      } else {
+        expression = expression.slice(0, range.start) + "neg(" + target + ")";
+      }
+
+      updateScreen();
+    }
+
+    function applySquare() {
+      clearErrorIfNeeded();
+
+      const range = findLastOperandRange(expression);
+      if (!range) {
+        setStatus(t("\u8acb\u5148\u8f38\u5165\u8981\u5e73\u65b9\u7684\u6578\u503c"), true);
+        return;
+      }
+
+      const target = expression.slice(range.start, range.end);
+      expression = expression.slice(0, range.start) + "(" + target + ")^2";
+      setStatus(t("\u5df2\u52a0\u5165\u5e73\u65b9"), false);
+      updateScreen();
+    }
+
+    function calculate() {
+      try {
+        const value = evaluateExpression(expression);
+        const formatted = formatNumber(value);
+        lastAnswer = value;
+        errorState = false;
+        setStatus(t("\u8a08\u7b97\u5b8c\u6210"), false);
+        expression = String(value);
+        updateScreen(formatted);
+      } catch (error) {
+        errorState = true;
+        setStatus(error.message || t("\u8a08\u7b97\u932f\u8aa4"), true);
+        updateScreen("Error");
+      }
+    }
+
+    calculator.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) {
+        return;
+      }
+
+      const action = button.dataset.action;
+      const insert = button.dataset.insert;
+
+      if (action === "clear") {
+        clearAll();
+        return;
+      }
+
+      if (action === "delete") {
+        deleteOne();
+        return;
+      }
+
+      if (action === "calculate") {
+        calculate();
+        return;
+      }
+
+      if (action === "mode") {
+        angleMode = angleMode === "DEG" ? "RAD" : "DEG";
+        updateModeDisplay();
+        setStatus(t("\u5df2\u5207\u63db\u5230") + (angleMode === "DEG" ? t("\u89d2\u5ea6\u6a21\u5f0f") : t("\u5f27\u5ea6\u6a21\u5f0f")), false);
+        return;
+      }
+
+      if (action === "toggle-sign") {
+        toggleSign();
+        return;
+      }
+
+      if (action === "square") {
+        applySquare();
+        return;
+      }
+
+      if (insert) {
+        appendValue(insert);
+      }
+    });
+
+    updateModeDisplay();
+    updateScreen("0");
+    updateWatermark();
+  </script>
+</body>
+</html>
